@@ -40,7 +40,7 @@ public abstract class ServerFilter implements ContainerRequestFilter, ContainerR
 	private static final String DATE_PATTERN = "EEE MMM d HH:mm:ss yyyy";
 	protected static final ZoneId DEFAULT_ZONE_ID = ZoneId.of( "America/Sao_Paulo" );
 
-	public void persistAudition( RequestDTO request, ResponseDTO response ) {
+	public void auditRequestResponse( RequestDTO request, ResponseDTO response ) {
 		throw new UnsupportedOperationException( "Persist Audition Not Implemented" );
 	}
 
@@ -74,7 +74,7 @@ public abstract class ServerFilter implements ContainerRequestFilter, ContainerR
 			}
 			response.setTookSeconds( Objects.isNull( tookSeconds ) ? tookSeconds + "s" : "< 1s" );
 
-			this.persistAudition( request, response );
+			this.auditRequestResponse( request, response );
 		} catch ( IOException | ParseException e) {
 			ServerFilter.logger.log( Level.SEVERE, "Error while intercepting client requests", e );
 		}

@@ -41,7 +41,7 @@ public abstract class ClientFilter implements ClientRequestFilter, ClientRespons
 	private static final ZoneId DEFAULT_ZONE_ID = ZoneId.of( "America/Sao_Paulo" );
 	protected static final String HEADER_ORIGIN_ACTION = "origin-action";
 
-	public void persistAudition( RequestDTO request, ResponseDTO response ) {
+	public void auditRequestResponse( RequestDTO request, ResponseDTO response ) {
 		throw new UnsupportedOperationException( "Persist Audition Not Implemented" );
 	}
 
@@ -58,7 +58,7 @@ public abstract class ClientFilter implements ClientRequestFilter, ClientRespons
 				tookSeconds = TimeUnit.MILLISECONDS.toSeconds( tookSeconds );
 			}
 			response.setTookSeconds( Objects.isNull( tookSeconds ) ? tookSeconds + "s" : "< 1s" );
-			this.persistAudition( request, response );
+			this.auditRequestResponse( request, response );
 		} catch ( IOException | ParseException e) {
 			ClientFilter.logger.log( Level.SEVERE, "Error while intercepting client requests", e );
 		}
