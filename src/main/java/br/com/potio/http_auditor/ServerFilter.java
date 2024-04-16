@@ -30,7 +30,9 @@ import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.container.ContainerResponseContext;
 import jakarta.ws.rs.container.ContainerResponseFilter;
 import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.ext.Provider;
 
+@Provider
 public abstract class ServerFilter implements ContainerRequestFilter, ContainerResponseFilter {
 
 	private static final Logger logger = Logger.getLogger( ServerFilter.class.getName() );

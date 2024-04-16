@@ -31,7 +31,9 @@ import jakarta.ws.rs.client.ClientResponseContext;
 import jakarta.ws.rs.client.ClientResponseFilter;
 import jakarta.ws.rs.core.EntityTag;
 import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.ext.Provider;
 
+@Provider
 public abstract class ClientFilter implements ClientRequestFilter, ClientResponseFilter {
 
 	private static final Logger logger = Logger.getLogger( ClientFilter.class.getName() );

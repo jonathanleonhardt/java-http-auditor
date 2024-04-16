@@ -27,6 +27,7 @@ import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.container.ContainerResponseContext;
 import jakarta.ws.rs.container.ContainerResponseFilter;
 import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.ext.Provider;
 import jakarta.ws.rs.ext.WriterInterceptor;
 import jakarta.ws.rs.ext.WriterInterceptorContext;
 
@@ -35,6 +36,7 @@ import jakarta.ws.rs.ext.WriterInterceptorContext;
  *      "https://stackoverflow.com/questions/55550652/how-do-i-debug-a-quarkus-smallrye-client-request/56015300#56015300">
  *      Based on stackoverflow answers</a>
  */
+@Provider
 public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilter,
 			ContainerResponseFilter, ClientResponseFilter, WriterInterceptor {
 

@@ -26,7 +26,7 @@ Import the most recent version in your `pom.xml`:
 <dependency>
 	<groupId>br.com.potio</groupId>
 	<artifactId>http-auditor</artifactId>
-	<version>0.2.0</version>
+	<version>0.4.0</version>
 </dependency>
 ```
 
