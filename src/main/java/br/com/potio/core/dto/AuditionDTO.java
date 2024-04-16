@@ -1,6 +1,10 @@
 package br.com.potio.core.dto;
 
-public class AuditionDTO {
+import java.io.Serializable;
+
+public class AuditionDTO implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	private String id;
 	private String idAccount;
@@ -12,6 +16,9 @@ public class AuditionDTO {
 	private String responseBody;
 	private Integer responseStatus;
 	private String tookSeconds;
+
+	public AuditionDTO() {
+	}
 
 	public AuditionDTO( String id, String idAccount, String description, String headers,
 			String requestBody, String requestMethod, String requestUrl, String responseBody,

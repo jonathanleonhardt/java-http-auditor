@@ -1,10 +1,13 @@
 package br.com.potio.core.dto;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-public class RequestDTO {
+public class RequestDTO implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	private String methodName;
 	private String url;
@@ -12,6 +15,9 @@ public class RequestDTO {
 	private String bodyTypeName;
 	private Map< String, List< String > > headers;
 	private Date date;
+
+	public RequestDTO() {
+	}
 
 	public RequestDTO( String methodName, String url, String body, String bodyTypeName,
 			Map< String, List< String > > headers, Date date ) {

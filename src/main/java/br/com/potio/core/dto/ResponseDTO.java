@@ -1,14 +1,20 @@
 package br.com.potio.core.dto;
 
+import java.io.Serializable;
 import java.util.Date;
 
-public class ResponseDTO {
+public class ResponseDTO implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	private Integer status;
 	private String body;
 	private String entityTag;
 	private Date date;
 	private String tookSeconds;
+
+	public ResponseDTO() {
+	}
 
 	public ResponseDTO( Integer status, String body, String entityTag, Date date, String tookSeconds ) {
 		this.status = status;
