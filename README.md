@@ -5,12 +5,12 @@ This library fulfills its role of auditing every HTTP request sent to or receive
 ## Prerequisites
 
 - Java 17 >
-- Be using HTTP in your endpoints ou in a http client
+- Be using HTTP in your endpoints or in a http client
 
 ## Highly compatible:
 
 - Quarkus
-- Spring Boot
+- Microprofile
 
 ## USE CASES
 
