@@ -44,8 +44,9 @@
 	<distributionManagement>
 		<repository>
 			<id>github</id>
+			<name>GitHub Packages</name>
 			<url>https://maven.pkg.github.com/jonathanleonhardt/java-http-auditor</url>
-	   </repository>
+		</repository>
 	</distributionManagement>
 
 </project>
