@@ -25,6 +25,8 @@ import java.util.logging.Logger;
 
 import br.com.potio.core.dto.RequestDTO;
 import br.com.potio.core.dto.ResponseDTO;
+import jakarta.json.bind.Jsonb;
+import jakarta.json.bind.JsonbBuilder;
 import jakarta.transaction.Transactional;
 import jakarta.transaction.Transactional.TxType;
 import jakarta.ws.rs.client.ClientRequestContext;
@@ -76,17 +78,10 @@ public abstract class ClientFilter implements ClientRequestFilter, ClientRespons
 		Object entity = null;
 		var hasEntity = context.hasEntity()
 				&& !( ( entity = context.getEntity() ) instanceof Form );
-		if ( hasEntity && entity instanceof String) {
-			body = (String) entity;
+		if ( hasEntity ) {
+			Jsonb jsonb = JsonbBuilder.create();
+			body = jsonb.toJson(entity);
 			bodyTypeName = entity.getClass().getName();
-		} else if ( hasEntity && entity instanceof InputStream ) {
-			try ( InputStream inputStream = ( InputStream ) entity; ){
-				byte[] bytes = inputStream.readAllBytes();
-				body = new String( bytes, StandardCharsets.UTF_8 );
-				bodyTypeName = entity.getClass().getName();
-			} catch ( IOException e ) {
-				ClientFilter.logger.log( Level.SEVERE, "Erro converting request body", e);
-			}
 		}
 		String requestDate = headers.get( "date" ).get( 0 );
 		var dateParser = new SimpleDateFormat( DATE_PATTERN, Locale.US );
