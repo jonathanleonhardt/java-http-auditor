@@ -1,6 +1,8 @@
 package br.com.potio.http_auditor;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -107,7 +109,7 @@ public abstract class ClientFilter implements ClientRequestFilter, ClientRespons
 			var bodyBuilder = new StringBuilder();
 
 			context.setEntityStream(
-					inBoundEntity( bodyBuilder, entityStream, DEFAULT_CHARSET ) );
+					inBoundEntity( entityStream, bodyBuilder ) );
 
 			body = bodyBuilder.toString();
 			entityTag = Optional.ofNullable( context.getEntityTag() )
@@ -122,18 +124,26 @@ public abstract class ClientFilter implements ClientRequestFilter, ClientRespons
 				.build();
 	}
 
-	private InputStream inBoundEntity( final StringBuilder stringBuilder, InputStream stream,
-			final Charset charset ) throws IOException {
+	private InputStream inBoundEntity( InputStream stream, StringBuilder builder ) throws IOException {
 		if ( !stream.markSupported() ) {
 			stream = new BufferedInputStream( stream );
 		}
-		stream.mark( MAX_ENTITY_SIZE + 1 );
-		final var entity = new byte[ MAX_ENTITY_SIZE + 1 ];
-		final int entitySize = stream.read( entity );
-		stringBuilder.append(
-				new String( entity, 0, Math.min( entitySize, MAX_ENTITY_SIZE ), charset ) );
-		stream.reset();
-		return stream;
+		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+		try {
+			int nRead;
+			byte[] data = new byte[MAX_ENTITY_SIZE];
+			while ( ( nRead = stream.read ( data, 0, data.length ) ) != -1 ) {
+				buffer.write( data, 0, nRead );
+				builder.append( new String( data, 0, nRead, DEFAULT_CHARSET ) );
+			}
+			ByteArrayInputStream retorno = new ByteArrayInputStream( buffer.toByteArray() );
+			retorno.mark(0);
+			return retorno;
+		} catch ( IOException e ) {
+			e.printStackTrace();
+		}
+	
+		return new BufferedInputStream( stream );
 	}
 
 	Map< String, List< String > > extractHeaders( MultivaluedMap< String, String > multivaluedHeaderMap ) {
