@@ -7,7 +7,6 @@ public class AuditionDTO implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private String id;
-	private String idAccount;
 	private String description;
 	private String headers;
 	private String requestBody;
@@ -20,11 +19,10 @@ public class AuditionDTO implements Serializable {
 	public AuditionDTO() {
 	}
 
-	public AuditionDTO( String id, String idAccount, String description, String headers,
-			String requestBody, String requestMethod, String requestUrl, String responseBody,
-			Integer responseStatus, String tookSeconds ) {
+	public AuditionDTO( String id, String description, String headers, String requestBody,
+			String requestMethod, String requestUrl, String responseBody, Integer responseStatus,
+			String tookSeconds ) {
 		this.id = id;
-		this.idAccount = idAccount;
 		this.description = description;
 		this.headers = headers;
 		this.requestBody = requestBody;
@@ -45,14 +43,6 @@ public class AuditionDTO implements Serializable {
 
 	public void setId( String id ) {
 		this.id = id;
-	}
-
-	public String getIdAccount() {
-		return idAccount;
-	}
-
-	public void setIdAccount( String idAccount ) {
-		this.idAccount = idAccount;
 	}
 
 	public String getDescription() {
@@ -121,7 +111,6 @@ public class AuditionDTO implements Serializable {
 
 	public static class Builder {
 		private String id;
-		private String idAccount;
 		private String description;
 		private String headers;
 		private String requestBody;
@@ -133,11 +122,6 @@ public class AuditionDTO implements Serializable {
 
 		public Builder withId( String id ) {
 			this.id = id;
-			return this;
-		}
-
-		public Builder withIdAccount( String idAccount ) {
-			this.idAccount = idAccount;
 			return this;
 		}
 
@@ -182,7 +166,7 @@ public class AuditionDTO implements Serializable {
 		}
 
 		public AuditionDTO build() {
-			return new AuditionDTO( id, idAccount, description, headers, requestBody, requestMethod,
+			return new AuditionDTO( id, description, headers, requestBody, requestMethod,
 					requestUrl, responseBody, responseStatus, tookSeconds );
 		}
 	}

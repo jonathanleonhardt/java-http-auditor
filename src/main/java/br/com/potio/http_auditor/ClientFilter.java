@@ -27,8 +27,6 @@ import br.com.potio.core.dto.RequestDTO;
 import br.com.potio.core.dto.ResponseDTO;
 import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
-import jakarta.transaction.Transactional;
-import jakarta.transaction.Transactional.TxType;
 import jakarta.ws.rs.client.ClientRequestContext;
 import jakarta.ws.rs.client.ClientRequestFilter;
 import jakarta.ws.rs.client.ClientResponseContext;
@@ -44,7 +42,7 @@ public abstract class ClientFilter implements ClientRequestFilter, ClientRespons
 	private static final int MAX_ENTITY_SIZE = 16 * 1024;
 	private static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
 	private static final String DATE_PATTERN = "EEE MMM d HH:mm:ss yyyy";
-	private static final ZoneId DEFAULT_ZONE_ID = ZoneId.of( "America/Sao_Paulo" );
+	private static final ZoneId DEFAULT_ZONE_ID = ZoneId.systemDefault();
 	protected static final String HEADER_ORIGIN_ACTION = "origin-action";
 
 	public void auditRequestResponse( RequestDTO request, ResponseDTO response ) {
@@ -52,11 +50,10 @@ public abstract class ClientFilter implements ClientRequestFilter, ClientRespons
 	}
 
 	@Override
-	@Transactional( value = TxType.REQUIRES_NEW )
-	public void filter( ClientRequestContext requestContext, ClientResponseContext responseContext ) {
+	public void filter( ClientRequestContext reqContext, ClientResponseContext resContext ) {
 		try {
-			var response = this.createResponse( responseContext );
-			var request = this.createRequest( requestContext );
+			var response = this.createResponse( resContext );
+			var request = this.createRequest( reqContext );
 			Long tookSeconds = null;
 			if ( !Objects.isNull( response.getDate() )
 					&&  !Objects.isNull( request.getDate() ) ) {
@@ -102,10 +99,7 @@ public abstract class ClientFilter implements ClientRequestFilter, ClientRespons
 		if ( context.hasEntity() ) {
 			InputStream entityStream = context.getEntityStream();
 			var bodyBuilder = new StringBuilder();
-
-			context.setEntityStream(
-					inBoundEntity( entityStream, bodyBuilder ) );
-
+			context.setEntityStream( inBoundEntity( entityStream, bodyBuilder ) );
 			body = bodyBuilder.toString();
 			entityTag = Optional.ofNullable( context.getEntityTag() )
 					.map( EntityTag::getValue )
@@ -141,10 +135,10 @@ public abstract class ClientFilter implements ClientRequestFilter, ClientRespons
 		return new BufferedInputStream( stream );
 	}
 
-	Map< String, List< String > > extractHeaders( MultivaluedMap< String, String > multivaluedHeaderMap ) {
+	private Map< String, List< String > > extractHeaders( MultivaluedMap< String, String > headerMap ) {
 		Map< String, List< String > > headers = new HashMap<>();
-		multivaluedHeaderMap.keySet().stream()
-				.forEach( key -> headers.put( key, multivaluedHeaderMap.get( key ) ) );
+		headerMap.keySet().stream()
+				.forEach( key -> headers.put( key, headerMap.get( key ) ) );
 		return headers;
 	}
 

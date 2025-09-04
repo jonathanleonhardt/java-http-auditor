@@ -1,6 +1,8 @@
 package br.com.potio.http_auditor;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -23,8 +25,6 @@ import br.com.potio.core.dto.RequestDTO;
 import br.com.potio.core.dto.ResponseDTO;
 import jakarta.enterprise.inject.spi.CDI;
 import jakarta.json.bind.Jsonb;
-import jakarta.transaction.Transactional;
-import jakarta.transaction.Transactional.TxType;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.container.ContainerResponseContext;
@@ -37,37 +37,35 @@ public abstract class ServerFilter implements ContainerRequestFilter, ContainerR
 
 	private static final Logger logger = Logger.getLogger( ServerFilter.class.getName() );
 	private static final Jsonb jsonb = CDI.current().select( Jsonb.class ).get();
-	private static final String HEADER_AUDITION_ENTITY = "audition-entity";
+	private static final String HEADER_ENTITY = "audition-entity";
 	private static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
 	private static final String DATE_PATTERN = "EEE MMM d HH:mm:ss yyyy";
-	protected static final ZoneId DEFAULT_ZONE_ID = ZoneId.of( "America/Sao_Paulo" );
+	protected static final ZoneId DEFAULT_ZONE_ID = ZoneId.systemDefault();
 
 	public void auditRequestResponse( RequestDTO request, ResponseDTO response ) {
 		throw new UnsupportedOperationException( "Persist Audition Not Implemented" );
 	}
 
 	@Override
-	@Transactional( value = TxType.REQUIRES_NEW )
 	public void filter( ContainerRequestContext requestContext ) throws IOException {
 		try {
 			var request = this.createRequest( requestContext );
-			requestContext.getHeaders().add( HEADER_AUDITION_ENTITY, jsonb.toJson( request ) );
-		} catch ( IOException | ParseException e) {
+			requestContext.getHeaders().add( HEADER_ENTITY, jsonb.toJson( request ) );
+		} catch ( IOException | ParseException e ) {
 			ServerFilter.logger.log( Level.SEVERE, "Error while intercepting client requests", e );
 		}
 	}
 
 	@Override
-	@Transactional( value = TxType.REQUIRES_NEW )
-	public void filter( ContainerRequestContext requestContext, ContainerResponseContext responseContext ) throws IOException {
+	public void filter( ContainerRequestContext reqContext, ContainerResponseContext resContext ) throws IOException {
 		try {
-			Map< String, List< String > > headersRequest = this.extractHeadersRequest( requestContext.getHeaders() );
-			if ( !headersRequest.containsKey( HEADER_AUDITION_ENTITY ) ) {
+			Map< String, List< String > > headersRequest = this.extractHeaders( reqContext.getHeaders() );
+			if ( !headersRequest.containsKey( HEADER_ENTITY ) ) {
 				return;
 			}
-			String auditionEntityJson = requestContext.getHeaders().get( HEADER_AUDITION_ENTITY ).get( 0 );
-			var request = jsonb.fromJson( auditionEntityJson , RequestDTO.class );
-			var response = this.createResponse( responseContext );
+			String auditionEntityJson = reqContext.getHeaders().get( HEADER_ENTITY ).get( 0 );
+			var request = jsonb.fromJson( auditionEntityJson, RequestDTO.class );
+			var response = this.createResponse( resContext );
 
 			Long tookSeconds = null;
 			if ( !Objects.isNull( response.getDate() ) && !Objects.isNull( request.getDate() ) ) {
@@ -77,29 +75,36 @@ public abstract class ServerFilter implements ContainerRequestFilter, ContainerR
 			response.setTookSeconds( Objects.isNull( tookSeconds ) ? tookSeconds + "s" : "< 1s" );
 
 			this.auditRequestResponse( request, response );
-		} catch ( IOException | ParseException e) {
+		} catch ( IOException | ParseException e ) {
 			ServerFilter.logger.log( Level.SEVERE, "Error while intercepting client requests", e );
 		}
 	}
 
-	private Map< String, List< String > > extractHeadersRequest( MultivaluedMap< String, String > multivaluedHeaderMap ) {
+	private Map< String, List< String > > extractHeaders( MultivaluedMap< String, String > headerMap ) {
 		Map< String, List< String > > headers = new HashMap<>();
-		multivaluedHeaderMap.keySet().stream()
-				.forEach( key -> headers.put( key, multivaluedHeaderMap.get( key ) ) );
+		headerMap.keySet().stream()
+				.forEach( key -> headers.put( key, headerMap.get( key ) ) );
 		return headers;
 	}
 
 	private RequestDTO createRequest( ContainerRequestContext context ) throws IOException, ParseException {
-		Map< String, List< String > > headers = this.extractHeadersRequest( context.getHeaders() );
+		Map< String, List< String > > headers = this.extractHeaders( context.getHeaders() );
 		var uri = context.getUriInfo().getRequestUri();
 		InputStream is = context.getEntityStream();
-		InputStream inputStream = !is.markSupported()
-				? new BufferedInputStream( is )
-				: is;
-		inputStream.mark( inputStream.available() + 1 );
-		byte[] data = inputStream.readAllBytes();
-		inputStream.reset();
-		context.setEntityStream( inputStream );
+		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+		byte[] chunk = new byte[ 8192 ];
+		int bytesRead;
+
+		while ( ( bytesRead = is.read( chunk ) ) != -1 ) {
+			buffer.write( chunk, 0, bytesRead );
+		}
+
+		byte[] data = buffer.toByteArray();
+
+		ByteArrayInputStream newInputStream = new ByteArrayInputStream( data );
+
+		context.setEntityStream( newInputStream );
+
 		String requestBody = new String( data, DEFAULT_CHARSET );
 		return RequestDTO.builder()
 				.withUrl( uri.toString() )
@@ -110,7 +115,8 @@ public abstract class ServerFilter implements ContainerRequestFilter, ContainerR
 				.build();
 	}
 
-	private ResponseDTO createResponse( ContainerResponseContext context ) throws IOException, ParseException {
+	private ResponseDTO createResponse( ContainerResponseContext context )
+			throws IOException, ParseException {
 		String body = null;
 		Object entity = null;
 		var hasEntity = context.hasEntity()
